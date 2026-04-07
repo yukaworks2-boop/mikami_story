@@ -291,13 +291,15 @@ def parse_slides(content: str) -> list[str]:
     return slides
 
 
+SPREADSHEET_ID = "12opzsgUNQhi9iQQJr8Ub1fkP4P9XBbpv51aEH4I6mWA"
+
+
 def write_to_spreadsheet(date_str: str, slides: list[str], topic_id: str):
     """Google Sheetsにスライド内容を転記する"""
-    spreadsheet_id = os.environ.get("SPREADSHEET_ID")
     creds_json = os.environ.get("GOOGLE_SERVICE_ACCOUNT_JSON")
 
-    if not spreadsheet_id or not creds_json:
-        print("SPREADSHEET_ID または GOOGLE_SERVICE_ACCOUNT_JSON が未設定のためスプシ転記をスキップ")
+    if not creds_json:
+        print("GOOGLE_SERVICE_ACCOUNT_JSON が未設定のためスプシ転記をスキップ")
         return
 
     creds_data = json.loads(creds_json)
@@ -305,7 +307,7 @@ def write_to_spreadsheet(date_str: str, slides: list[str], topic_id: str):
     creds = Credentials.from_service_account_info(creds_data, scopes=scopes)
     client = gspread.authorize(creds)
 
-    spreadsheet = client.open_by_key(spreadsheet_id)
+    spreadsheet = client.open_by_key(SPREADSHEET_ID)
     sheet = spreadsheet.sheet1
 
     # 1行 = 1日分。列A=日付, 列B以降=スライド1〜10
