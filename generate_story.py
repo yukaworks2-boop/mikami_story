@@ -7,10 +7,13 @@
 """
 
 import anthropic
+import gspread
 import os
 import json
+import re
 import random
 from datetime import datetime, timezone, timedelta
+from google.oauth2.service_account import Credentials
 
 # 日本時間 (JST = UTC+9)
 JST = timezone(timedelta(hours=9))
@@ -252,6 +255,8 @@ def generate_story(topic: dict) -> str:
 上記のような文体・テンポ・構成を参考にしてください。
 """
 
+    slide_count = random.randint(5, 10)
+
     user_message = f"""今日のインスタストーリーを作成してください。
 
 【何を言うか】：{topic['what']}
@@ -259,6 +264,7 @@ def generate_story(topic: dict) -> str:
 【どう言うか】：{topic['how']}
 {example_section}
 注意事項：
+- ストーリーは必ず{slide_count}枚構成にする
 - 「。」は使わない
 - 「〜なんよな」「〜なんよ」を自然に使う
 - 関西弁は使わない
@@ -275,6 +281,37 @@ def generate_story(topic: dict) -> str:
     )
 
     return message.content[0].text
+
+
+def parse_slides(content: str) -> list[str]:
+    """生成されたストーリーテキストをスライド単位に分割する"""
+    # 「📱 ストーリー N枚目」の区切りで分割
+    parts = re.split(r'━+\s*\n📱 ストーリー \d+枚目\s*\n━+', content)
+    slides = [s.strip() for s in parts if s.strip()]
+    return slides
+
+
+def write_to_spreadsheet(date_str: str, slides: list[str], topic_id: str):
+    """Google Sheetsにスライド内容を転記する"""
+    spreadsheet_id = os.environ.get("SPREADSHEET_ID")
+    creds_json = os.environ.get("GOOGLE_SERVICE_ACCOUNT_JSON")
+
+    if not spreadsheet_id or not creds_json:
+        print("SPREADSHEET_ID または GOOGLE_SERVICE_ACCOUNT_JSON が未設定のためスプシ転記をスキップ")
+        return
+
+    creds_data = json.loads(creds_json)
+    scopes = ["https://www.googleapis.com/auth/spreadsheets"]
+    creds = Credentials.from_service_account_info(creds_data, scopes=scopes)
+    client = gspread.authorize(creds)
+
+    spreadsheet = client.open_by_key(spreadsheet_id)
+    sheet = spreadsheet.sheet1
+
+    # 1行 = 1日分。列A=日付, 列B以降=スライド1〜10
+    row = [date_str, topic_id] + slides
+    sheet.append_row(row, value_input_option="RAW")
+    print(f"スプレッドシートに転記しました: {len(slides)}枚のスライド")
 
 
 def save_story(content: str, date_str: str, topic_id: str) -> str:
@@ -302,9 +339,16 @@ def main():
     print("Claude APIでストーリーを生成中...")
     story = generate_story(topic)
 
-    # 保存
+    # スライド分割
+    slides = parse_slides(story)
+    print(f"スライド数: {len(slides)}枚")
+
+    # GitHubリポジトリに保存
     file_path = save_story(story, date_str, topic["id"])
     print(f"ストーリーを保存しました: {file_path}")
+
+    # スプレッドシートに転記
+    write_to_spreadsheet(date_str, slides, topic["id"])
 
     # 使用済みトピックを更新
     used_ids.append(topic["id"])
