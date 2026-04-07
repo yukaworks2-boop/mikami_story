@@ -1,0 +1,40 @@
+name: みかみストーリー 毎日自動生成
+
+on:
+  schedule:
+    # 毎日JST 09:00 (UTC 00:00) に実行
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+    # 手動実行も可能
+
+jobs:
+  generate-story:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install anthropic
+
+      - name: Generate today's story
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python generate_story.py
+
+      - name: Commit and push story
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add stories/
+          git diff --staged --quiet || git commit -m "みかみストーリー: $(TZ='Asia/Tokyo' date '+%Y-%m-%d')"
+          git push
