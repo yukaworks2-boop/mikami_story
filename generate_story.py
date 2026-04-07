@@ -310,8 +310,8 @@ def write_to_spreadsheet(date_str: str, slides: list[str], topic_id: str):
     spreadsheet = client.open_by_key(SPREADSHEET_ID)
     sheet = spreadsheet.sheet1
 
-    # 1行 = 1日分。列A=日付, 列B以降=スライド1〜10
-    row = [date_str, topic_id] + slides
+    # A列=日付, B〜F列=空白, G列以降=スライド1枚目〜
+    row = [date_str, "", "", "", "", ""] + slides
     sheet.append_row(row, value_input_option="RAW")
     print(f"スプレッドシートに転記しました: {len(slides)}枚のスライド")
 
