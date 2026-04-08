@@ -295,7 +295,7 @@ SPREADSHEET_ID = "12opzsgUNQhi9iQQJr8Ub1fkP4P9XBbpv51aEH4I6mWA"
 
 
 def write_to_spreadsheet(date_str: str, slides: list[str], topic_id: str):
-    """Google Sheetsにスライド内容を転記する"""
+    """Google SheetsのA列の日付に一致する行のG列以降にスライドを書き込む"""
     creds_json = os.environ.get("GOOGLE_SERVICE_ACCOUNT_JSON")
 
     if not creds_json:
@@ -310,10 +310,27 @@ def write_to_spreadsheet(date_str: str, slides: list[str], topic_id: str):
     spreadsheet = client.open_by_key(SPREADSHEET_ID)
     sheet = spreadsheet.sheet1
 
-    # A列=日付, B〜F列=空白, G列以降=スライド1枚目〜
-    row = [date_str, "", "", "", "", ""] + slides
-    sheet.append_row(row, value_input_option="RAW")
-    print(f"スプレッドシートに転記しました: {len(slides)}枚のスライド")
+    # 日付を M/D 形式に変換（スプシの形式に合わせる）
+    date_obj = datetime.strptime(date_str, "%Y-%m-%d")
+    date_short = f"{date_obj.month}/{date_obj.day}"
+
+    # A列を取得して10行目以降で日付が一致する行を探す
+    a_col = sheet.col_values(1)
+    target_row = None
+    for i in range(9, len(a_col)):  # 10行目(index=9)以降
+        if a_col[i] == date_short:
+            target_row = i + 1  # gspreadは1-indexed
+            break
+
+    if target_row is None:
+        print(f"日付 {date_short} に一致する行が見つからないためスキップ")
+        return
+
+    # G列(7列目)以降にスライドを書き込む
+    for i, slide in enumerate(slides):
+        sheet.update_cell(target_row, 7 + i, slide)
+
+    print(f"{target_row}行目のG列以降に転記しました: {len(slides)}枚のスライド")
 
 
 def save_story(content: str, date_str: str, topic_id: str) -> str:
