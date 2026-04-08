@@ -17,7 +17,8 @@ SPREADSHEET_ID = "12opzsgUNQhi9iQQJr8Ub1fkP4P9XBbpv51aEH4I6mWA"
 def parse_slides(content: str) -> list[str]:
     """ストーリーテキストをスライド単位に分割する"""
     parts = re.split(r'━+\s*\n📱 ストーリー \d+枚目\s*\n━+', content)
-    slides = [s.strip() for s in parts if s.strip()]
+    # parts[0] はファイルヘッダーなのでスキップ
+    slides = [s.strip() for s in parts[1:] if s.strip()]
     return slides
 
 
