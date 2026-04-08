@@ -347,6 +347,9 @@ def save_story(content: str, date_str: str, topic_id: str) -> str:
 
 
 def main():
+    import sys
+    no_spreadsheet = "--no-spreadsheet" in sys.argv
+
     print(f"みかみストーリー生成開始: {date_str} ({['月','火','水','木','金','土','日'][weekday]}曜日)")
 
     # トピック選択
@@ -366,8 +369,11 @@ def main():
     file_path = save_story(story, date_str, topic["id"])
     print(f"ストーリーを保存しました: {file_path}")
 
-    # スプレッドシートに転記
-    write_to_spreadsheet(date_str, slides, topic["id"])
+    # スプレッドシートへの転記（--no-spreadsheet オプションがない場合のみ）
+    if no_spreadsheet:
+        print("スプシ転記をスキップ（確認後に「② スプシに転記」ワークフローを実行してください）")
+    else:
+        write_to_spreadsheet(date_str, slides, topic["id"])
 
     # 使用済みトピックを更新
     used_ids.append(topic["id"])
