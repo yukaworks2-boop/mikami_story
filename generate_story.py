@@ -7,13 +7,11 @@
 """
 
 import anthropic
-import gspread
 import os
 import json
 import re
 import random
 from datetime import datetime, timezone, timedelta
-from google.oauth2.service_account import Credentials
 
 # 日本時間 (JST = UTC+9)
 JST = timezone(timedelta(hours=9))
@@ -465,6 +463,9 @@ SPREADSHEET_ID = "12opzsgUNQhi9iQQJr8Ub1fkP4P9XBbpv51aEH4I6mWA"
 
 def write_to_spreadsheet(date_str: str, slides: list[str], topic_id: str):
     """Google SheetsのA列の日付に一致する行のG列以降にスライドを書き込む"""
+    import gspread
+    from google.oauth2.service_account import Credentials
+
     creds_json = os.environ.get("GOOGLE_SERVICE_ACCOUNT_JSON")
 
     if not creds_json:
