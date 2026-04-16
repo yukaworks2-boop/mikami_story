@@ -2,6 +2,10 @@
 
 ストーリー作成時の参考情報を随時蓄積するファイル。
 
+## 情報ソース
+- X（Twitter）: https://x.com/mikami_01
+- YouTube: https://youtube.com/channel/UC_PUuYmn8e4rZpOHgaTdUrg?si=edNG613T26k6fid3
+
 ---
 
 ## 基本プロフィール
