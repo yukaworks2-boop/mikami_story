@@ -75,7 +75,7 @@ URL: https://www.youtube.com/watch?v=vPX9SXHgCRA
 
 ---
 
-### 【アドネス社内Claude Code実況】
+### 【アドネス社内Claude Code実況】X投稿動画（スタッフとの会話）
 URL: https://www.youtube.com/watch?v=3tJwgY21GYk
 
 **キーポイント：**
