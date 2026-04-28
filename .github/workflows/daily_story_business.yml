@@ -1,0 +1,39 @@
+name: ③ 毎日ビジネスストーリー生成（確認用）
+
+on:
+  schedule:
+    # 毎日JST 09:00 (UTC 00:00) に実行
+    - cron: '0 21 * * *'
+  workflow_dispatch:
+
+jobs:
+  generate-story-business:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install anthropic
+
+      - name: ビジネスストーリーを生成してGitHubに保存（スプシ転記なし）
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python generate_story_business.py --no-spreadsheet
+
+      - name: Commit and push story
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add stories_business/
+          git diff --staged --quiet || git commit -m "三上ビジネス ストーリー生成: $(TZ='Asia/Tokyo' date '+%Y-%m-%d')"
+          git push

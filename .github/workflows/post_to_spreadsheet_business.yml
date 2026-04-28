@@ -1,0 +1,36 @@
+name: ④ ビジネス スプシに転記（確認後に手動実行）
+
+on:
+  workflow_dispatch:
+    inputs:
+      date:
+        description: '転記する日付 (例: 2026-04-08)　空白なら今日'
+        required: false
+        default: ''
+      sheet_name:
+        description: 'シート名（空白なら「ビジネス」）'
+        required: false
+        default: 'ビジネス'
+
+jobs:
+  post-to-spreadsheet-business:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install gspread google-auth
+
+      - name: スプシに転記
+        env:
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+          TARGET_DATE: ${{ github.event.inputs.date }}
+          SHEET_NAME: ${{ github.event.inputs.sheet_name }}
+        run: python post_to_spreadsheet_business.py
