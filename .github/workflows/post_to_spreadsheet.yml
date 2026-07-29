@@ -7,6 +7,10 @@ on:
         description: '転記する日付 (例: 2026-04-08)　空白なら今日'
         required: false
         default: ''
+      dates:
+        description: '複数日まとめて転記 (例: 2026-07-30,2026-07-31,2026-08-01)'
+        required: false
+        default: ''
 
 jobs:
   post-to-spreadsheet:
@@ -27,5 +31,14 @@ jobs:
       - name: スプシに転記
         env:
           GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
-          TARGET_DATE: ${{ github.event.inputs.date }}
-        run: python post_to_spreadsheet.py
+        run: |
+          if [ -n "${{ github.event.inputs.dates }}" ]; then
+            IFS=',' read -ra DATE_LIST <<< "${{ github.event.inputs.dates }}"
+            for d in "${DATE_LIST[@]}"; do
+              d=$(echo $d | xargs)
+              echo "転記中: $d"
+              TARGET_DATE="$d" python post_to_spreadsheet.py
+            done
+          else
+            TARGET_DATE="${{ github.event.inputs.date }}" python post_to_spreadsheet.py
+          fi
